@@ -71,6 +71,7 @@ Big (2500 sq ft)	3000
 4.3.1 Query 1: Feedback analysis of each stall of a specific year
 Purpose: The purpose of this query is to help managers look at customer feedback for stalls in a specific year, showing key performance metrics like average rating and feedback counts. It helps managers see what customers like or dislike about each stall, which can guide improvements. It also helps with bigger decisions like where to invest resources and how to stay competitive in the market, all aimed at improving customer satisfaction and the business performance.
 ![image](https://github.com/Yeeen0822/ChineseFoodHawkerCentreDatabase/assets/103027502/b5f0a344-e901-44b0-bc6c-2dd677771980)
+
 Figure 4.3.1 
 Figure 4.3.1 presents a feedback analysis of stalls for the year 2022, including average ratings, percentage breakdown of positive, negative, and neutral feedback. The average rating is sorted in descending order, facilitating easy viewing for stakeholders.
 
