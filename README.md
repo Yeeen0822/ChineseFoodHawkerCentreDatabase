@@ -19,11 +19,10 @@ Business Rules:
 3.	Every stall has its menu. For example, a stall with stall ID ‘SA’ has menu items with menu ID starting with ‘SA’ like ‘SA01’.
 4.	Every order must be delivered on the same day.
 5.	The order cannot be cancelled once placed.
-6.	
-Stall Size	Rental Fee (RM)
-Small (900 sq ft)	1500
-Medium (1600 sq ft)	2300
-Big (2500 sq ft)	3000
+6.	Stall Size	Rental Fee (RM)
+   Small (900 sq ft)	1500
+   Medium (1600 sq ft)	2300
+   Big (2500 sq ft)	3000
 7.	Business hours are from 10 am to 8 pm.
 8.	Each staff can collect zero or many rentals and each rental collection can only be collected by one and only one staff. (Zero to Many)
 9.	Each tenant can pay one or many rentals and each rental can only be paid by one and only one tenant. (One to Many)
