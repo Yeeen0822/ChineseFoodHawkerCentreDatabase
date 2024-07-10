@@ -104,6 +104,7 @@ Purpose: The purpose of this trigger is to calculate and update the return amoun
 
 4.3.7 Report 1: Customer Orders Report
 Purpose: The purpose of this report is to provide a comprehensive overview of customer orders within a defined time period. It presents details such as customer ID, name, contact, and age, along with individual order information like order ID, date, time, and total spent. By calculating the total spent by all customers and summarising the total order value and customer count, this report enables businesses to analyse customer buying patterns, track sales performance, and make informed decisions to enhance their products or services.
+
 ![image](https://github.com/Yeeen0822/ChineseFoodHawkerCentreDatabase/assets/103027502/38a1f84c-af2b-4d0e-aac4-b51fb08ec956)
 ![image](https://github.com/Yeeen0822/ChineseFoodHawkerCentreDatabase/assets/103027502/74986ae2-bd33-4c6c-8456-efc36ce20390)
 
