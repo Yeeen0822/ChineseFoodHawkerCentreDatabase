@@ -1,3 +1,6 @@
+In collaboration with Yam Jason (https://github.com/HackerDoggo101) 
+
+
 Chapter 1  Background of the System
 
 In setting up a database for a Chinese Food Hawker Centre, we are creating a system to keep everything organised and running smoothly so that the hawker centre can operate smoothly. Think of it like a digital hub where each food stall, staff member, and customer detail is neatly stored and managed.
