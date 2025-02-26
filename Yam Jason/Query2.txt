@@ -1,0 +1,57 @@
+SET PAGESIZE 120
+SET LINESIZE 130
+SET VERIFY OFF
+
+PROMPT 'Stalls that Spent at least $3000 on Electricity and $1000 on Water in a Year and the Total'
+PROMPT
+
+ACCEPT input_year NUMBER PROMPT 'Enter the year (2020/2021/2022): '
+-- Set column formatting
+
+COLUMN StallID FORMAT A15
+COLUMN TotalElectricityPayment FORMAT $999999.99 heading "Electricity Payment"
+COLUMN TotalWaterPayment FORMAT $999999.99 heading "Water Payment"
+
+-- Set the title
+TTITLE ON
+TTITLE CENTER '+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+' SKIP 1 -
+       CENTER ' |           Stalls that Spent at least $3000 on Electricity and $1000 on Water in '&input_year'         | ' SKIP 1 -
+       CENTER '+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+' SKIP 1 - 
+       LEFT   'DATE: ' _DATE - 
+       RIGHT  'PAGE: ' FORMAT 999 SQL.PNO SKIP 2
+
+CREATE OR REPLACE VIEW view_TotalElectricWater AS
+SELECT
+    s.StallID,
+    SUM(rc.ElectricityPaymentAmt) AS TotalElectricityPayment,
+    SUM(rc.WaterPaymentAmt) AS TotalWaterPayment
+FROM
+    Stall s
+JOIN
+    Contract c ON s.StallID = c.StallID
+JOIN
+    Tenant t ON c.TenantID = t.TenantID
+JOIN
+    RentalCollection rc ON t.TenantID = rc.TenantID
+WHERE
+    EXTRACT(YEAR FROM rc.CollectDate) = &input_year 
+GROUP BY
+    s.StallID
+HAVING SUM(rc.WaterPaymentAmt) > 1000 AND SUM(rc.ElectricityPaymentAmt) > 3000
+ORDER BY
+    s.StallID ASC
+WITH READ ONLY CONSTRAINT totalElectricPayment_readOnly;
+
+-- Compute the total 
+BREAK ON REPORT
+COMPUTE SUM LABEL "Total:"  OF "TotalElectricityPayment" ON REPORT
+COMPUTE SUM LABEL "Total:"  OF "TotalWaterPayment" ON REPORT
+
+select * from view_TotalElectricWater;
+
+
+CLEAR COLUMNS
+TTITLE OFF
+CLEAR BREAKS
+CLEAR COMPUTES
+SET VERIFY ON

@@ -1,0 +1,78 @@
+SET SERVEROUTPUT ON
+
+-- Define the function outside of the procedure
+CREATE OR REPLACE FUNCTION determine_gender(v_tenantIC IN Tenant.TenantIC%TYPE) RETURN VARCHAR IS
+  v_last_digit NUMBER := TO_NUMBER(SUBSTR(v_tenantIC, -1));
+BEGIN
+  IF MOD(v_last_digit, 2) = 1 THEN
+    RETURN 'Male'; 
+  ELSE
+    RETURN 'Female'; 
+  END IF;
+END determine_gender;
+/
+
+CREATE OR REPLACE PROCEDURE prc_retrieve_tenant_details (v_tenantID IN CHAR) IS
+  v_tenantName Tenant.TenantName%TYPE;
+  v_tenantIC Tenant.TenantIC%TYPE;
+  v_tenantContact Tenant.TenantContact%TYPE;
+  v_tenantAddress Tenant.TenantAddress%TYPE;
+  v_gender VARCHAR(6); 
+  TENANT_NOT_FOUND EXCEPTION;
+  INVALID_TENANT_ID EXCEPTION;
+  NULL_TENANT_ID EXCEPTION;
+  PRAGMA EXCEPTION_INIT(TENANT_NOT_FOUND, -20001);
+  PRAGMA EXCEPTION_INIT(INVALID_TENANT_ID, -20002);
+  PRAGMA EXCEPTION_INIT(NULL_TENANT_ID, -20003);
+  v_row_count NUMBER := 0;
+BEGIN
+  -- Validate input parameter and tenant ID format
+  IF v_tenantID IS NULL THEN
+    RAISE NULL_TENANT_ID;
+  ELSIF NOT REGEXP_LIKE(v_tenantID, '^T[0-9]{2}$') THEN
+    RAISE INVALID_TENANT_ID;
+  ELSE
+    -- Retrieve tenant details
+    SELECT COUNT(*) INTO v_row_count
+    FROM Tenant
+    WHERE TenantID = v_tenantID;
+
+    -- Check if any rows are found
+    IF (v_row_count = 0) THEN
+      RAISE TENANT_NOT_FOUND; -- Raise custom exception if no rows found
+    ELSE
+      SELECT TenantName, TenantIC, TenantContact, TenantAddress
+      INTO v_tenantName, v_tenantIC, v_tenantContact, v_tenantAddress
+      FROM Tenant
+      WHERE TenantID = v_tenantID;
+
+      v_gender := determine_gender(v_tenantIC);
+
+      -- Output tenant details
+      DBMS_OUTPUT.PUT_LINE('Tenant ID : ' || v_tenantID);
+      DBMS_OUTPUT.PUT_LINE('Name      : ' || v_tenantName);
+      DBMS_OUTPUT.PUT_LINE('IC        : ' || v_tenantIC);
+      DBMS_OUTPUT.PUT_LINE('Gender    : ' || v_gender); 
+      DBMS_OUTPUT.PUT_LINE('Contact   : ' || v_tenantContact);
+      DBMS_OUTPUT.PUT_LINE('Address   : ' || v_tenantAddress);
+    END IF;
+  END IF;
+
+EXCEPTION
+  WHEN TENANT_NOT_FOUND THEN
+    DBMS_OUTPUT.PUT_LINE('Tenant with ID ' || v_tenantID || ' not found!');
+  WHEN INVALID_TENANT_ID THEN
+    DBMS_OUTPUT.PUT_LINE('Invalid tenant ID format.');
+  WHEN NULL_TENANT_ID THEN
+    DBMS_OUTPUT.PUT_LINE('Tenant ID cannot be null.');
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END;
+/
+
+
+EXEC prc_retrieve_tenant_details('T01');
+EXEC prc_retrieve_tenant_details('D01');
+EXEC prc_retrieve_tenant_details('');
+
+SET SERVEROUTPUT OFF

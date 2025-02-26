@@ -1,0 +1,45 @@
+SET PAGESIZE 120
+SET LINESIZE 130
+SET VERIFY OFF
+
+PROMPT 'Total Profit gain from each store type that has made at least $200000 in a year'
+
+-- Prompt the user to input the year
+ACCEPT input_year NUMBER PROMPT 'Enter the year (2020/2021/2022): '
+
+-- Set column formatting
+COLUMN StallSize FORMAT A15
+COLUMN TotalProfit FORMAT $999999.99 heading "Total Profit"
+
+-- Set the title
+TTITLE ON
+TTITLE CENTER '+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+' SKIP 1 -
+       CENTER ' |          Profit gain from each store type that has made at least $200000 in year '&input_year'         | ' SKIP 1 -
+       CENTER '+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+' SKIP 1 - 
+       LEFT   'DATE: ' _DATE - 
+       RIGHT  'PAGE: ' FORMAT 999 SQL.PNO SKIP 2
+
+-- SQL query to calculate the total rental profit by summing the rental fees and grouping by stall size
+CREATE OR REPLACE VIEW view_RentalProfitByStallSize AS
+SELECT s.StallSize, SUM(s.RentalFee) AS TotalProfit
+FROM Stall s
+JOIN Contract c USING (StallID)
+JOIN Tenant t USING (TenantID)
+JOIN RentalCollection rc USING (TenantID)
+WHERE EXTRACT(YEAR FROM rc.CollectDate) = &input_year
+GROUP BY s.StallSize
+HAVING SUM(s.RentalFee) > 200000
+ORDER BY s.StallSize ASC
+WITH READ ONLY CONSTRAINT rental_readOnly;
+
+-- Compute the total rental profit
+BREAK ON REPORT
+COMPUTE SUM LABEL "Total: "  OF "TotalProfit" ON REPORT
+
+SELECT * FROM view_RentalProfitByStallSize;
+
+CLEAR COLUMNS
+TTITLE OFF
+CLEAR BREAKS
+CLEAR COMPUTES
+SET VERIFY ON

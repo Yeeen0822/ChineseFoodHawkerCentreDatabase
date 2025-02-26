@@ -1,0 +1,37 @@
+--trigger(Jason)--	
+CREATE OR REPLACE TRIGGER trg_UpdateSellingPrice
+BEFORE INSERT ON OrderMenu
+FOR EACH ROW
+DECLARE
+    v_unit_price      Menu.UnitPrice%TYPE;
+    v_menuId          Menu.MenuID%TYPE;
+BEGIN
+    -- Retrieve the unit price from the Menu table
+    SELECT UnitPrice, MenuID INTO v_unit_price, v_menuId
+    FROM Menu
+    WHERE MenuID = :NEW.MenuID;
+
+    -- Check if the MenuID exists in the Menu table
+    IF v_menuId IS NOT NULL THEN
+        -- Check if the quantity does not exceed 7
+        IF :NEW.Quantity <= 7 THEN
+            -- Set the SellingPrice for the new row to UnitPrice * 1.06
+            :NEW.SellingPrice := v_unit_price * 1.06;
+
+            -- Output message after setting SellingPrice
+            DBMS_OUTPUT.PUT_LINE('SellingPrice set to: ' || :NEW.SellingPrice || ' for MenuID: ' || :NEW.MenuID);
+        ELSE
+            -- Quantity exceeds 7, raise an error
+            RAISE_APPLICATION_ERROR(-20000, 'Quantity cannot exceed 7.');
+        END IF;
+    ELSE
+        -- MenuID not found, raise an error
+        RAISE_APPLICATION_ERROR(-20000, 'MenuID ' || :NEW.MenuID || ' not found in the Menu table.');
+    END IF;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        -- Handle case when MenuID not found
+        RAISE_APPLICATION_ERROR(-20000, 'MenuID ' || :NEW.MenuID || ' not found in the Menu table.');
+END;
+/

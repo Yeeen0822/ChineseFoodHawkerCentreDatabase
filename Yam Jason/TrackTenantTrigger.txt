@@ -1,0 +1,85 @@
+set linesize 350
+set pagesize 200
+
+DROP TABLE InsertTenant;
+DROP TABLE UpdateTenant;
+DROP TABLE DeleteTenant;
+
+CREATE TABLE InsertTenant(
+	TenantID CHAR(3) NOT NULL,
+	TenantName VARCHAR(25) NOT NULL,
+	TenantIC CHAR(14) NOT NULL,
+	TenantContact VARCHAR(15) NOT NULL,
+	TenantAddress VARCHAR(80) NOT NULL,
+	UserID VARCHAR(30),
+	TransDate DATE,
+	TransTime CHAR(8)
+);
+
+CREATE TABLE UpdateTenant(
+	TenantID CHAR(3) NOT NULL,
+	TenantName VARCHAR(25) NOT NULL,
+	NewTenantName VARCHAR(25) NOT NULL,
+	TenantIC CHAR(14) NOT NULL,
+	NewTenantIC CHAR(14) NOT NULL,
+	TenantContact VARCHAR(15) NOT NULL,
+	NewTenantContact VARCHAR(15) NOT NULL,
+	TenantAddress VARCHAR(80) NOT NULL,
+	NewTenantAddress VARCHAR(80) NOT NULL,
+	UserID VARCHAR(30),
+	TransDate DATE,
+	TransTime CHAR(8)
+);
+CREATE TABLE DeleteTenant(
+	TenantID CHAR(3) NOT NULL,
+	TenantName VARCHAR(25) NOT NULL,
+	TenantIC CHAR(14) NOT NULL,
+	TenantContact VARCHAR(15) NOT NULL,
+	TenantAddress VARCHAR(80) NOT NULL,
+	UserID VARCHAR(30),
+	TransDate DATE,
+	TransTime CHAR(8)
+);
+
+
+-- Tracking actions into multiple table
+CREATE OR REPLACE TRIGGER trg_track_tenant
+AFTER INSERT OR UPDATE OR DELETE ON Tenant
+FOR EACH ROW
+
+BEGIN      	
+ CASE
+  WHEN INSERTING THEN
+    INSERT INTO InsertTenant
+    VALUES(:NEW.TenantID, :NEW.TenantName, :NEW.TenantIC, 
+           :NEW.TenantContact, :NEW.TenantAddress, USER, SYSDATE, TO_CHAR(SYSDATE, 'HH24:MI:SS'));
+  WHEN UPDATING THEN
+    INSERT INTO UpdateTenant
+    VALUES(:OLD.TenantID, :OLD.TenantName, :NEW.TenantName, :OLD.TenantIC, 
+           :NEW.TenantIC, :OLD.TenantContact, :NEW.TenantContact, 
+	   :OLD.TenantAddress, :NEW.TenantAddress, USER, SYSDATE, 
+           TO_CHAR(SYSDATE, 'HH24:MI:SS'));
+  WHEN DELETING THEN
+    INSERT INTO DeleteTenant
+    VALUES(:OLD.TenantID, :OLD.TenantName, :OLD.TenantIC, 
+           :OLD.TenantContact, :OLD.TenantAddress, USER, SYSDATE, TO_CHAR(SYSDATE, 'HH24:MI:SS'));
+ END CASE;
+END;
+/
+
+INSERT INTO Tenant
+VALUES('T11', 'Yam Yam', '030717-10-1085', '016-896 2213', 'No 27 Jalan Zapin 2D Klang Selangor');
+
+INSERT INTO Tenant
+VALUES('T12', 'Yee En', '030822-10-1394', '016-896 2212', 'No 28 Jalan Zapin 2D Klang Selangor');
+
+UPDATE Tenant
+SET TenantIC = '030808-10-1010'
+WHERE TenantID = 'T12';
+
+DELETE FROM Tenant
+WHERE TenantID = 'T11';
+
+SELECT * FROM InsertTenant;
+SELECT * FROM UpdateTenant;
+SELECT * FROM DeleteTenant;

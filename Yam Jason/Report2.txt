@@ -1,0 +1,113 @@
+SET PAGESIZE 120
+SET LINESIZE 200
+SET SERVEROUTPUT ON
+CREATE OR REPLACE PROCEDURE prc_orderPromotion IS
+
+ v_PromoID Promotion.PromoID%TYPE;
+ v_PromoDescription Promotion.PromoDescription%TYPE;
+ v_PromoStartDate Promotion.PromoStartDate%TYPE;
+ v_PromoEndDate Promotion.PromoEndDate%TYPE;
+ v_PromoValue Promotion.PromoValue%TYPE;
+ v_RedemptionQty Promotion.RedemptionQty%TYPE;
+ v_OrderID Orders.OrderID%TYPE;
+ v_OrderDate Orders.OrderDate%TYPE;
+ v_OrderTime Orders.OrderTime%TYPE;
+ v_PaymentID Orders.PaymentID%TYPE;
+ v_orderCount Number(11,2);
+ v_totalValue Number(11,2);
+ v_usedPromo Number(3);
+
+ CURSOR promotionCursor IS
+ SELECT PromoID, PromoDescription, PromoStartDate, PromoEndDate, PromoValue, RedemptionQty
+ FROM PROMOTION
+ ORDER BY PromoID;
+
+ CURSOR orderCursor IS
+ SELECT OrderID, OrderDate, OrderTime, PaymentID
+ FROM Orders 
+ WHERE PromoID = v_PromoID;
+
+BEGIN
+ DBMS_OUTPUT.PUT_LINE(RPAD('=',160,'=')); 
+ DBMS_OUTPUT.PUT_LINE(CHR(10));
+ DBMS_OUTPUT.PUT_LINE(RPAD('-', 67, '-') || 'Promotion Redemption Report' || RPAD('-', 66, '-'));
+ DBMS_OUTPUT.PUT_LINE(CHR(10));
+ OPEN promotionCursor;
+ v_totalValue := 0;
+ v_usedPromo := 0;
+ LOOP
+ FETCH promotionCursor INTO v_PromoID, v_PromoDescription, v_PromoStartDate, v_PromoEndDate, v_PromoValue, v_RedemptionQty;
+ EXIT WHEN promotionCursor%NOTFOUND;
+
+-- TITLE
+  DBMS_OUTPUT.PUT_LINE(RPAD('=', 160, '='));
+  DBMS_OUTPUT.PUT_LINE(CHR(10));
+  DBMS_OUTPUT.PUT_LINE('PromotionID           : ' || v_PromoID);
+  DBMS_OUTPUT.PUT_LINE('PromotionDescription  : ' || v_PromoDescription);
+  DBMS_OUTPUT.PUT_LINE('PromoStartDate        : ' || v_PromoStartDate);
+  DBMS_OUTPUT.PUT_LINE('PromoEndDate          : ' || v_PromoEndDate);
+  DBMS_OUTPUT.PUT_LINE('PromoValue            : ' || v_PromoValue);
+  DBMS_OUTPUT.PUT_LINE('RedemptionQty         : ' || v_RedemptionQty);
+  DBMS_OUTPUT.PUT_LINE(CHR(10));
+  DBMS_OUTPUT.PUT_LINE(RPAD('=', 160, '='));
+
+-- Heading
+  DBMS_OUTPUT.PUT_LINE(RPAD('OrderID',10,' ') ||
+                       RPAD('OrderDate',20,' ') ||
+                       RPAD('OrderTime',20,' ') ||
+                       RPAD('PaymentID',10,' '));
+  DBMS_OUTPUT.PUT_LINE(RPAD('=',160,'='));
+
+-- Body
+
+  OPEN orderCursor;
+
+  v_orderCount := 0;
+  LOOP
+  FETCH orderCursor INTO v_OrderID, v_OrderDate, v_OrderTime, v_PaymentID;
+  EXIT WHEN orderCursor%NOTFOUND;
+  
+  v_orderCount := v_orderCount + 1;
+
+  DBMS_OUTPUT.PUT_LINE(RPAD(v_OrderID,10,' ') ||
+                        RPAD(v_OrderDate,20,' ') ||
+                        RPAD(v_OrderTime,20,' ') ||
+                        RPAD(v_PaymentID, 10,' ')); 
+  END LOOP;
+  IF v_orderCount > 0 THEN
+  v_usedPromo := v_usedPromo + 1;
+  END IF;
+  v_totalValue := v_totalValue + v_orderCount;
+  DBMS_OUTPUT.PUT_LINE(RPAD('=', 160, '='));
+
+-- Footer
+
+  DBMS_OUTPUT.PUT_LINE('Order Count: ' || v_orderCount);
+
+
+  CLOSE orderCursor;
+  END LOOP;
+
+  DBMS_OUTPUT.PUT_LINE(RPAD('=', 160, '='));
+  DBMS_OUTPUT.PUT_LINE(CHR(10));
+  DBMS_OUTPUT.PUT_LINE(RPAD('-', 74, '-') || RPAD('< Summary >', 86, '-'));
+  DBMS_OUTPUT.PUT_LINE(CHR(10));
+  DBMS_OUTPUT.PUT_LINE('Total Orders that applied a Promotion : ' || v_totalValue || ' Orders');
+  DBMS_OUTPUT.PUT_LINE('Promotions Used                       : ' || v_usedPromo);
+  DBMS_OUTPUT.PUT_LINE('Total number of Promotions            : ' || promotionCursor%ROWCOUNT);
+  DBMS_OUTPUT.PUT_LINE('Promotions Used Percentage            : ' || ROUND((v_usedPromo / promotionCursor%ROWCOUNT) * 100, 2) || '%');
+  DBMS_OUTPUT.PUT_LINE(CHR(10));
+  DBMS_OUTPUT.PUT_LINE(RPAD('=', 74, '=') || RPAD('End Of Report', 86, '='));
+
+
+  DBMS_OUTPUT.PUT_LINE(CHR(10));
+CLOSE promotionCursor;
+END;
+/
+ 
+
+EXEC prc_orderPromotion
+  
+SET SERVEROUTPUT OFF
+
+  

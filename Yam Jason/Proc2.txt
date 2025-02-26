@@ -1,0 +1,77 @@
+SET SERVEROUTPUT ON
+
+CREATE OR REPLACE PROCEDURE Insert_Staff (
+    p_StaffName IN Staff.StaffName%TYPE,
+    p_StaffPosition IN Staff.StaffPosition%TYPE,
+    p_StaffAddress IN Staff.StaffAddress%TYPE,
+    p_StaffContact IN Staff.StaffContact%TYPE,
+    p_StaffEmail IN Staff.StaffEmail%TYPE,
+    p_Salary IN Staff.Salary%TYPE
+)
+IS
+    -- Declare variables
+    v_StaffID Staff.StaffID%TYPE;
+    v_StaffExists NUMBER;
+    -- Declare custom exceptions
+    Missing_Field EXCEPTION;
+    Duplicate_Name EXCEPTION;
+    PRAGMA EXCEPTION_INIT(Missing_Field, -20001);
+    PRAGMA EXCEPTION_INIT(Duplicate_Name, -20003);
+BEGIN
+    -- Check if any required field is missing
+    IF p_StaffName IS NULL OR p_StaffPosition IS NULL OR p_StaffAddress IS NULL 
+        OR p_StaffContact IS NULL OR p_StaffEmail IS NULL THEN
+        -- Raise an exception if any required field is missing
+        RAISE Missing_Field;
+    ELSE
+        -- Check if the staff name already exists
+        SELECT COUNT(*)
+        INTO v_StaffExists
+        FROM Staff
+        WHERE UPPER(StaffName) = UPPER(p_StaffName);
+
+        IF v_StaffExists > 0 THEN
+            -- Raise an exception if the staff name already exists
+            RAISE Duplicate_Name;
+        ELSE
+            -- Get the maximum StaffID and increment it
+            SELECT 'E' || LPAD(SUBSTR(MAX(StaffID), 2) + 1, 2, '0')
+            INTO v_StaffID
+            FROM Staff;
+
+            -- Insert the new staff member
+            INSERT INTO Staff (StaffID, StaffName, StaffPosition, StaffAddress, StaffContact, StaffEmail, Salary)
+            VALUES (v_StaffID, p_StaffName, p_StaffPosition, p_StaffAddress, p_StaffContact, p_StaffEmail, p_Salary);
+
+            -- Commit the transaction
+            COMMIT;
+
+            -- Display success message
+            DBMS_OUTPUT.PUT_LINE('Staff member ' || p_StaffName || ' inserted successfully with ID ' || v_StaffID);
+        END IF;
+    END IF;
+EXCEPTION
+    -- Handle missing field exception
+    WHEN Missing_Field THEN
+        -- Display error message
+        DBMS_OUTPUT.PUT_LINE('All fields are required!');
+    
+    -- Handle duplicate name exception
+    WHEN Duplicate_Name THEN
+        -- Display error message for duplicate staff name
+        DBMS_OUTPUT.PUT_LINE('Staff member ' || p_StaffName || ' already exists!');
+
+    -- Handle other exceptions
+    WHEN OTHERS THEN
+        -- Rollback the transaction
+        ROLLBACK;
+        -- Display generic error message
+        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END Insert_Staff;
+/
+
+EXEC Insert_Staff('Ng Jason', 'Manager', '22 Jalan Permai, Taman Megah, 47301 Petaling Jaya, Selangor', '016-896 2213', 'jasonyam@gmail.com', 8888.88)
+
+EXEC Insert_Staff('', 'Manager', '22 Jalan Permai, Taman Megah, 47301 Petaling Jaya, Selangor', '016-896 2213', 'jasonyam@gmail.com', 8888.88)
+
+SET SERVEROUTPUT OFF
